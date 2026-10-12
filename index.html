@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
+<meta name="x5-orientation" content="portrait">
+<title>Aura</title>
+<style>
+:root{
+  /* Colours sampled pixel by pixel from reference images Group 42-46 */
+  --blue:#4A6CFA; --blue-d:#3D5BF7; --blue-l:#5C7CFA; --blue-soft:#E8ECFE;
+  /* Gradient ends of filled buttons: white text and icons sit on top, so they must not brighten with --blue in night mode */
+  --fill-a:#5C7CFA; --fill-b:#3D5BF7;
+  --green:#0E9E69; --red:#EC1616; --red-l:#FF5A5F;
+  --card:#FBFBFE; --row:#F1F2F5; --track:#CACFD6;
+  --ink:#17181C; --ink2:#646C79; --ovink:#5A6270;
+  --line:rgba(23,24,28,.07);
+  /* Geometry */
+  --r:24px; --r-s:16px; --pad:16px; --gap:32px; --navh:79px;
+  /* Background gradient */
+  --bg:linear-gradient(180deg,#DCE2F6 0%,#E7E6F9 22%,#EEE7FC 46%,#F7F4FD 68%,#FBFBFE 80%,#D9E2F5 100%);
+  --fs:"Segoe UI","Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:#E8EAF1;font-family:var(--fs);color:var(--ink)}
+
+/* ---------- Phone shell ---------- */
+/* Laid out on a fixed 393x852 artboard, then scaled as a whole by JS to fit the viewport,
+   so the phone is always fully visible and the internal proportions never change */
+.phone{position:absolute;left:50%;top:50%;width:393px;height:852px;overflow:hidden;border-radius:44px;
+  margin-left:-196.5px;margin-top:-426px;transform-origin:50% 50%;
+  background:var(--bg);box-shadow:0 30px 70px -22px rgba(35,45,90,.34),0 0 0 1px rgba(35,45,90,.06)}
+/* Status bar */
+.sb{position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 26px 0 38px;z-index:60;pointer-events:none}
+.sb .t{font-size:15px;font-weight:600;letter-spacing:.01em}
+.sb .r{display:flex;align-items:center;gap:6px}
+.island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:113px;height:34px;
+  background:#111;border-radius:17px;z-index:61}
+svg.ic{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+svg.ic.s{width:17px;height:17px;stroke-width:1.8}
+
+/* ---------- Screens ---------- */
+.screen{position:absolute;top:0;right:0;bottom:0;left:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+.screen.scroll{overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.screen.scroll::-webkit-scrollbar{display:none}
+
+/* ---------- Shared ---------- */
+.card{background:var(--card);border-radius:var(--r);padding:20px;
+  box-shadow:0 6px 22px -14px rgba(35,45,90,.22)}
+.tile{width:48px;height:44px;border-radius:14px;background:var(--blue-soft);color:var(--blue-d);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.tile.g{background:#E4F7F0;color:var(--green)}
+.tile.r{background:#FEECEC;color:var(--red)}
+.tile.b{background:#EEF0FE;color:var(--blue-d)}
+.ct{font-size:15px;font-weight:600;line-height:1.35}
+.cs{font-size:13px;color:var(--ink2);line-height:1.5;margin-top:3px}
+.pillbtn{width:100%;height:52px;border:none;border-radius:26px;background:var(--card);color:var(--ink);
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;
+  box-shadow:0 6px 20px -12px rgba(35,45,90,.28);transition:transform .16s,box-shadow .16s}
+.pillbtn:active{transform:scale(.985)}
+.pillbtn.blue{background:linear-gradient(180deg,var(--fill-a),var(--fill-b));color:#fff}
+.spacer{flex:1}
+/* Theme icon in the top-right corner (as in reference images 42/43) */
+.theme{position:absolute;top:78px;right:20px;width:46px;height:46px;border-radius:50%;border:none;
+  background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .3s,color .3s;
+  box-shadow:0 6px 18px -12px rgba(35,45,90,.55)}
+
+/* ---------- 1. Searching / 2. Paired ---------- */
+.scBrand{display:flex;flex-direction:column;padding:0 var(--pad);height:100%}
+.spTop{height:198px;flex:none}
+.brand{font-size:13px;font-weight:600;letter-spacing:.34em;color:var(--blue-d);text-align:center}
+.brand i{font-style:normal;font-weight:500;letter-spacing:.2em}
+.tag{font-size:22px;font-weight:700;text-align:center;margin-top:12px;letter-spacing:.01em}
+.hero{position:relative;height:260px;flex:none;margin-top:16px;display:flex;
+  align-items:center;justify-content:center}
+.hero .halo{position:absolute;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.92) 0%,rgba(255,255,255,.5) 46%,rgba(255,255,255,0) 72%)}
+.hero .ringoc{position:absolute;border-radius:50%;border:1px solid rgba(122,140,215,.20)}
+.hero .r1{width:258px;height:258px}
+.hero .r2{width:200px;height:200px;border-color:rgba(122,140,215,.16)}
+.hero .r3{width:148px;height:148px;border-color:rgba(122,140,215,.12)}
+.hero .disc{position:relative;width:114px;height:114px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 30px -14px rgba(60,80,170,.34)}
+.spin{width:44px;height:44px;animation:spin 1.15s linear infinite}
+.spin circle{fill:none;stroke:var(--blue);stroke-width:5.5;stroke-linecap:round;
+  stroke-dasharray:88 32}
+@keyframes spin{to{transform:rotate(360deg)}}
+.check{width:56px;height:56px;color:var(--green)}
+.cardline{margin-top:24px;flex:none}
+.pairrow{display:flex;align-items:center;gap:9px;margin-top:11px;padding-left:1px}
+.pairrow svg{color:var(--ink2)}
+.pairrow span{font-size:13px;color:var(--ink2)}
+.cta2{margin-top:24px;flex:none}
+.padBot{height:117px;flex:none}
+
+/* ---------- 3. Guard (earbuds-connection layout) ---------- */
+.scGuard{display:flex;flex-direction:column;padding:0 var(--pad) 0}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:54px;height:44px;flex:none}
+.gtitle{font-size:17px;font-weight:600}
+.gback{width:44px;height:44px;border-radius:50%;border:none;background:var(--card);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  box-shadow:0 4px 16px -10px rgba(35,45,90,.3)}
+.gtitle{font-size:17px;font-weight:600}
+.clipbox{position:relative;height:222px;flex:none;margin-top:30px;display:flex;
+  align-items:center;justify-content:center}
+/* White disc: 210px across, about 53% of the 393px shell width (matches reference 240/453) */
+.clipbox .clipdisc{position:absolute;width:210px;height:210px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 20px 42px -26px rgba(58,72,132,.38),0 0 0 1px rgba(255,255,255,.85);
+  transition:background .45s,box-shadow .45s}
+.clipbox.off .clipdisc{background:#FCFCFE;
+  box-shadow:0 14px 30px -26px rgba(58,72,132,.26),0 0 0 1px rgba(255,255,255,.7)}
+.clipbox:not(.off) .clipdisc::after{content:"";position:absolute;top:-9px;right:-9px;bottom:-9px;left:-9px;border-radius:50%;
+  background:radial-gradient(circle,rgba(74,108,250,.16) 0%,rgba(74,108,250,.05) 58%,rgba(74,108,250,0) 78%)}
+/* Clip: 140px tall, 66% of the disc diameter, same as the reference (158/240) */
+.clipimg{position:relative;height:140px;width:auto;display:block;
+  filter:drop-shadow(0 9px 15px rgba(120,110,95,.24))}
+.battrow{display:flex;flex-direction:column;align-items:center;flex:none;margin-top:20px}
+.batt{position:relative;width:88px;height:88px}
+.batt svg{transform:rotate(-90deg)}
+.batt .btr{fill:none;stroke:rgba(23,24,28,.10);stroke-width:7}
+/* Battery ring: guard off = grey (same "inactive" meaning as the --track status dot, using --ink2 for 3:1 visibility),
+   guard on = blue, the same colour as the "Connected · Guard on" dot below */
+.batt .bfr{fill:none;stroke:var(--ink2);stroke-width:7;stroke-linecap:round;
+  transition:stroke .45s,stroke-dashoffset .6s}
+/* When guard is on, a soft blue glow is added outside the ring to distinguish it from "off" */
+.batt.on .bfr{stroke:var(--blue);filter:drop-shadow(0 3px 7px rgba(61,91,247,.40))}
+.batt .num{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:baseline;justify-content:center;
+  gap:1px;padding-top:33px}
+.batt .num b{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.batt .num em{font-size:11px;font-style:normal;color:var(--ink2);font-weight:500}
+.devinfo{display:flex;align-items:center;gap:6px;margin-top:12px;flex:none}
+.devinfo span{font-size:13px;color:var(--ink2)}
+.devinfo .dt{width:6px;height:6px;border-radius:50%;background:var(--track);transition:background .3s}
+.devinfo.on .dt{background:var(--blue)}
+.gcard{margin-top:28px;flex:none}
+.grow{display:flex;align-items:center;gap:14px}
+.grow .tt{font-size:15px;font-weight:600;line-height:1.35}
+.grow .ss{font-size:13px;color:var(--ink2);margin-top:3px;line-height:1.4}
+.gdesc{font-size:13px;line-height:1.62;color:var(--ink2);margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--line)}
+.gbot{height:28px;flex:none}
+/* Guard mode button (replaces the old toggle switch)
+   Its colour says whether guard is running, using the same set as the ring and the dot:
+   off = neutral grey (dark), on = blue and lit */
+.gbtn{flex:none;height:34px;min-width:92px;padding:0 18px;border-radius:17px;border:none;
+  background:var(--track);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;margin-left:auto;letter-spacing:.01em;
+  transition:background .25s,color .25s,box-shadow .25s;box-shadow:none}
+.gbtn.on{background:var(--fill-b);color:#fff;
+  box-shadow:0 6px 16px -10px rgba(61,91,247,.75)}
+
+/* ---------- Bottom navigation ---------- */
+.nav{position:absolute;left:16px;right:16px;bottom:16px;height:var(--navh);z-index:50;
+  background:var(--card);border-radius:28px;display:flex;align-items:center;
+  box-shadow:0 10px 30px -14px rgba(35,45,90,.30)}
+.nav.hide{display:none}
+.nb{flex:1;height:100%;background:none;border:none;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:var(--ink2);position:relative}
+.nb span{font-size:11px;font-weight:500}
+.nb.on{color:var(--blue-d)}
+.nb.on:after{content:"";position:absolute;bottom:9px;width:4px;height:4px;border-radius:50%;background:var(--blue)}
+.nb.on svg{stroke-width:2}
+
+/* ---------- 4. Call ---------- */
+/* On Call and Help the <section> is itself the scroll container,
+   so side padding and the bottom safe area go directly on it (other pages have .scBrand / .scGuard inner wrappers) */
+/* 116 = shell bottom 852 - nav top 757 + a 21px gap, so content scrolled to the end is never covered by the nav */
+#scCall{padding:0 var(--pad) 116px}
+#scHelp{padding:0 var(--pad) 116px}
+#scPaired .padBot{height:100px}
+.spTop2{height:54px;flex:none}
+.callhero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 22px 24px}
+.bigbtn{width:100px;height:100px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(180deg,var(--fill-a),var(--fill-b));color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 16px 34px -12px rgba(61,91,247,.55),0 0 0 10px rgba(74,108,250,.09)}
+.bigbtn svg{width:40px;height:40px;stroke-width:1.9}
+.bigbtn.r{background:linear-gradient(180deg,var(--red-l),var(--red));color:#fff;
+  box-shadow:0 16px 34px -12px rgba(236,22,22,.5),0 0 0 10px rgba(236,22,22,.08)}
+.calltitle{font-size:17px;font-weight:700;margin-top:24px}
+.callsub{font-size:13px;color:var(--ink2);line-height:1.62;margin-top:10px;max-width:268px}
+.callnow{width:100%;height:50px;margin-top:26px;border-radius:25px;background:var(--card);border:none;
+  font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 20px -12px rgba(35,45,90,.28)}
+.tarea{width:100%;min-height:96px;margin-top:9px;border-radius:var(--r-s);border:1px solid #ECEEF3;
+  background:#F7F8FB;padding:12px 14px;font-family:inherit;font-size:14px;line-height:1.7;
+  color:var(--ink);outline:none;resize:none}
+.tarea:focus{border-color:rgba(74,108,250,.5);background:#fff}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;margin-top:18px;
+  border-radius:3px;background:#E6E9F2;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+  background:#fff;border:1px solid #E1E4EC;box-shadow:0 2px 8px rgba(35,45,90,.24);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;
+  border:1px solid #E1E4EC;box-shadow:0 2px 8px rgba(35,45,90,.24);cursor:pointer}
+
+/* ---------- Overlays ---------- */
+.overlay{position:absolute;top:0;right:0;bottom:0;left:0;z-index:70;display:none;flex-direction:column;
+  background:linear-gradient(180deg,rgba(226,230,246,.86),rgba(244,242,252,.9));
+  -webkit-backdrop-filter:blur(26px) saturate(1.4);backdrop-filter:blur(26px) saturate(1.4);
+  padding:0 24px}
+.overlay.on{display:flex}
+.ovlabel{font-size:12px;color:var(--ovink);letter-spacing:.22em;text-align:center;margin-top:96px}
+.ovname{font-size:30px;font-weight:700;text-align:center;margin-top:14px}
+.ovsub{font-size:13px;color:var(--ovink);text-align:center;margin-top:10px;line-height:1.6}
+.ovav{width:104px;height:104px;border-radius:50%;margin:34px auto 0;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 34px -14px rgba(60,80,170,.36),0 0 0 12px rgba(255,255,255,.5)}
+.ovav svg{width:42px;height:42px;color:var(--blue-d);stroke-width:1.7}
+.ovbtns{display:flex;justify-content:space-around;margin-top:auto;margin-bottom:64px}
+.ob{display:flex;flex-direction:column;align-items:center;gap:11px;background:none;border:none;
+  font-family:inherit;cursor:pointer}
+.ob .c{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 12px 26px -12px rgba(30,40,80,.4)}
+.ob .c.g{background:linear-gradient(180deg,#14C48A,var(--green))}
+.ob .c.b{background:linear-gradient(180deg,var(--fill-a),var(--fill-b))}
+.ob.off .c.b{background:#DCE0E9;color:#8A93A3;box-shadow:0 10px 22px -14px rgba(30,40,80,.4)}
+.ob .c.r{background:linear-gradient(180deg,var(--red-l),var(--red))}
+.ob .l{font-size:13px;color:var(--ovink);font-weight:500}
+/* On call */
+.ovtop{display:flex;flex-direction:column;align-items:center;margin-top:74px}
+.ovtop .st{font-size:12px;color:var(--ovink);letter-spacing:.2em}
+.ovtop .nm{font-size:26px;font-weight:700;margin-top:12px}
+.ovtop .tm{font-size:15px;color:var(--blue-d);font-weight:600;margin-top:8px;
+  font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.callwave{display:flex;gap:5px;align-items:flex-end;height:24px;justify-content:center;margin-top:24px}
+.callwave i{width:3px;border-radius:2px;background:var(--blue);opacity:.55;display:block;
+  animation:wv 1.05s ease-in-out infinite}
+.callwave i:nth-child(1){height:8px;animation-delay:0s}
+.callwave i:nth-child(2){height:15px;animation-delay:.13s}
+.callwave i:nth-child(3){height:21px;animation-delay:.26s}
+.callwave i:nth-child(4){height:13px;animation-delay:.39s}
+.callwave i:nth-child(5){height:18px;animation-delay:.52s}
+.callwave i:nth-child(6){height:10px;animation-delay:.65s}
+@keyframes wv{0%,100%{transform:scaleY(.55)}50%{transform:scaleY(1)}}
+.subwrap{margin-top:20px;flex:1;overflow:hidden;display:flex;flex-direction:column;
+  justify-content:flex-start;gap:10px;padding-bottom:12px;max-height:330px}
+.subline{background:#fff;border-radius:18px 18px 18px 6px;padding:13px 17px;font-size:15px;
+  line-height:1.55;color:var(--ink);max-width:86%;align-self:flex-start;
+  box-shadow:0 6px 18px -12px rgba(35,45,90,.3);animation:fadeUp .5s ease both}
+.subline.mine{align-self:flex-end;border-radius:18px 18px 6px 18px;background:var(--blue);color:#fff}
+@keyframes fadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.ovhint{font-size:12px;color:var(--ovink);text-align:center;margin-bottom:18px;line-height:1.6}
+
+/* ---------- Confirm dialog · send location ---------- */
+.modal{position:absolute;top:0;right:0;bottom:0;left:0;z-index:90;display:none;align-items:center;justify-content:center;
+  padding:0 30px;background:rgba(18,22,40,.36);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.modal.on{display:flex}
+.mcard{width:100%;background:var(--card);border-radius:24px;padding:26px 22px 20px;text-align:center;
+  box-shadow:0 26px 60px -22px rgba(25,35,80,.48);animation:pop .22s ease both}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.mtile{width:62px;height:62px;border-radius:50%;margin:0 auto;background:var(--blue-soft);
+  color:var(--blue-d);display:flex;align-items:center;justify-content:center}
+.mtile svg{width:30px;height:30px;stroke-width:1.7}
+.mtitle{font-size:18px;font-weight:700;margin-top:16px;line-height:1.45}
+.mdesc{font-size:13px;color:var(--ink2);line-height:1.72;margin-top:10px}
+.mbtns{display:flex;gap:10px;margin-top:22px}
+.mbtn{flex:1;height:46px;border-radius:14px;border:none;background:var(--row);color:var(--ink);
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+/* The primary button uses solid --fill-b, consistent with the other confirm buttons on the page;
+   the gradient top #5C7CFA only reaches 3.67:1 against white text, which fails at 15px */
+.mbtn.pri{background:var(--fill-b);color:#fff;
+  box-shadow:0 10px 22px -12px rgba(61,91,247,.7)}
+/* Lightweight toast */
+.toast{position:absolute;left:50%;bottom:152px;z-index:100;transform:translateX(-50%) translateY(8px);
+  background:rgba(23,24,28,.92);color:#fff;font-size:13px;line-height:1.4;
+  padding:11px 18px;border-radius:14px;max-width:78%;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- Night mode (toggle in the top-right corner) ---------- */
+/* Only variables change, plus a few hard-coded light blocks; --fill-a/--fill-b do not brighten,
+   otherwise white text and icons on pale blue would drop below 3:1 */
+body.night{background:#0B0D13}
+body.night .phone{
+  /* color must be re-declared here: color:var(--ink) on body is already resolved to a dark value at body level,
+   children only inherit that resolved dark value and will not follow the variable */
+  color:var(--ink);
+  --blue:#6D8AFF; --blue-d:#8CA3FF; --blue-l:#7C97FF; --blue-soft:#262B44;
+  --fill-a:#4A6CFA; --fill-b:#3350E8;
+  --red:#FF4D52; --red-l:#E23A40;
+  --card:#22252F; --row:#2B2F3B; --track:#4A5063;
+  --ink:#F2F4F8; --ink2:#A6ADBC; --ovink:#B4BAC8;
+  --line:rgba(255,255,255,.10);
+  --bg:linear-gradient(180deg,#15182A 0%,#1A1E33 24%,#1E2138 48%,#1A1C28 70%,#14161F 86%,#0F1118 100%);
+  box-shadow:0 30px 70px -22px rgba(0,0,0,.72),0 0 0 1px rgba(255,255,255,.07);
+}
+body.night .card,body.night .nav,body.night .pillbtn,body.night .callnow,
+body.night .theme,body.night .gback{box-shadow:0 8px 26px -16px rgba(0,0,0,.8)}
+body.night .hero .halo{background:radial-gradient(circle,rgba(120,140,235,.20) 0%,
+  rgba(120,140,235,.07) 46%,rgba(120,140,235,0) 72%)}
+body.night .hero .disc,body.night .ovav{background:#2A2E3A}
+body.night .clipdisc{background:#2A2E3A;box-shadow:0 20px 42px -26px rgba(0,0,0,.62)}
+body.night .clipbox.off .clipdisc{background:#262A34}
+body.night .subline{background:#2B2F3B;color:var(--ink)}
+body.night .subline.mine{background:var(--fill-b);color:#fff}
+body.night .tin,body.night .tarea,body.night .madd input{
+  background:#191C25;border-color:rgba(255,255,255,.11);color:var(--ink)}
+body.night .tin:focus,body.night .tarea:focus{background:#1E222C}
+body.night input[type=range]::-webkit-slider-thumb{background:#3B4150;border-color:#4A5063}
+body.night input[type=range]::-moz-range-thumb{background:#3B4150;border-color:#4A5063}
+body.night .tile.b{background:#262B44}
+body.night .tile.g{background:#1E3A2C}
+body.night .tile.r{background:#3A2026}
+body.night .ob.off .c.b{background:#333846;color:#8A93A3}
+body.night .batt .btr{stroke:rgba(255,255,255,.14)}
+/* The night background is dark, so the blue glow has to be brighter to read */
+body.night .batt.on .bfr{filter:drop-shadow(0 3px 8px rgba(109,138,255,.55))}
+body.night .sosprog .tr{stroke:rgba(255,106,111,.20)}
+body.night .overlay{background:linear-gradient(180deg,rgba(14,16,26,.90),rgba(20,22,34,.94))}
+body.night .ovhint,body.night .ovlabel{color:var(--ovink)}
+
+/* ---------- 3. Guard (v4: SOS layout) ---------- */
+.scGuard{display:flex;flex-direction:column;padding:0 var(--pad) 0}
+.ghead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+  margin-top:74px;height:52px;flex:none}
+.ghbox{text-align:right;flex:none;margin-top:9px}
+.ghtt{font-size:20px;font-weight:700;line-height:1.25;letter-spacing:.01em}
+.ghts{font-size:12px;color:var(--ink2);margin-top:3px}
+.gback{width:44px;height:44px;border-radius:50%;border:none;background:var(--card);color:var(--ink);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  box-shadow:0 4px 16px -10px rgba(35,45,90,.3)}
+
+/* SOS block: red disc + two breathing rings + hold-progress ring */
+.soszone{position:relative;height:210px;flex:none;margin-top:28px;
+  display:flex;align-items:center;justify-content:center}
+.sosring{position:absolute;top:0;right:0;bottom:0;left:0;margin:auto;border-radius:50%;
+  border:1px solid rgba(236,22,22,.16);animation:breathe 2.8s ease-in-out infinite}
+.sosr1{width:206px;height:206px}
+.sosr2{width:180px;height:180px;border-color:rgba(236,22,22,.26);animation-delay:.6s}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.04);opacity:.42}}
+.sosprog{position:absolute;top:0;right:0;bottom:0;left:0;margin:auto;width:180px;height:180px;transform:rotate(-90deg)}
+.sosprog circle{fill:none;stroke-width:5;stroke-linecap:round}
+.sosprog .tr{stroke:rgba(236,22,22,.14)}
+.sosprog .pr{stroke:var(--red);stroke-dasharray:552.92;stroke-dashoffset:552.92;
+  transition:stroke-dashoffset .08s linear}
+.sosbig{position:relative;width:162px;height:162px;border-radius:50%;border:none;cursor:pointer;
+  background:radial-gradient(circle at 50% 32%,#F7585D 0%,var(--red) 58%,#CE1212 100%);
+  color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  font-family:inherit;touch-action:none;user-select:none;
+  box-shadow:0 20px 40px -16px rgba(236,22,22,.6),inset 0 -2px 12px rgba(0,0,0,.10)}
+.sosbig-t{font-size:34px;font-weight:700;letter-spacing:.06em;line-height:1}
+.sosbig-s{font-size:12.5px;color:rgba(255,255,255,.93);letter-spacing:.02em}
+.sosbig.done{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+
+/* Device row: battery + connection */
+.devrow{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;margin-top:14px}
+.mchip{display:flex;align-items:center;gap:6px;height:32px;padding:0 13px;border-radius:16px;
+  background:var(--card);color:var(--ink2);font-size:12.5px;
+  box-shadow:0 5px 16px -12px rgba(35,45,90,.35)}
+.mchip svg{color:var(--ink2)}
+.mchip b{font-weight:600;color:var(--ink)}
+.mchip .dt{width:6px;height:6px;border-radius:50%;background:var(--track);transition:background .3s}
+.mchip.on,.mchip.on svg,.mchip.on b{color:var(--blue-d)}
+.mchip.on .dt{background:var(--blue)}
+
+/* Location */
+.locline{display:flex;align-items:center;gap:9px;flex:none;margin-top:22px;padding:0 2px}
+.locok{display:flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:14px;
+  background:#E4F7F0;color:var(--green);font-size:12.5px;font-weight:600;flex:none}
+.locok svg{width:14px;height:14px;stroke-width:2.1}
+.locaddr{font-size:12.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.locbar2{display:flex;align-items:center;gap:9px;flex:none;margin-top:16px;height:52px;
+  padding:0 16px;border-radius:16px;background:var(--card);border:none;width:100%;
+  font-family:inherit;cursor:pointer;text-align:left;
+  box-shadow:0 6px 20px -14px rgba(35,45,90,.28)}
+.locbar2 svg{color:var(--blue-d);flex:none}
+.locbar2 .ad{flex:1;min-width:0;font-size:13.5px;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.locbar2 .set{flex:none;font-size:12.5px;font-weight:600;color:var(--green)}
+
+/* Two shortcut cards */
+.minirow{display:flex;align-items:center;gap:13px;margin-top:26px;flex:none;
+  background:var(--card);border-radius:20px;padding:15px 16px;
+  box-shadow:0 6px 22px -16px rgba(35,45,90,.24)}
+.minirow .mi{flex:1;min-width:0}
+.minirow .mt{font-size:15px;font-weight:600}
+.minirow .ms{font-size:12.5px;color:var(--ink2);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mib{flex:none;height:34px;padding:0 15px;border-radius:17px;border:none;
+  background:var(--blue-soft);color:var(--blue-d);font-family:inherit;font-size:12.5px;
+  font-weight:600;cursor:pointer}
+.gbot{height:38px;flex:none}
+
+/* ---------- 5. Contacts ---------- */
+#scContact{padding:0 var(--pad) 116px}
+.spTop4{height:68px;flex:none}
+.ptitle2{font-size:26px;font-weight:700;letter-spacing:.01em}
+.psub2{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.6}
+.emptybox{display:flex;flex-direction:column;align-items:center;text-align:center;
+  margin-top:44px;flex:none}
+.etile{width:104px;height:104px;border-radius:30px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 32px -20px rgba(35,45,90,.42)}
+.etile svg{width:44px;height:44px;color:#9AA3B4;stroke-width:1.6}
+.etitle{font-size:19px;font-weight:700;margin-top:26px}
+.edesc{font-size:13.5px;color:var(--ink2);line-height:1.72;margin-top:12px}
+.ebtn{margin-top:28px;height:52px;padding:0 34px;border-radius:26px;border:none;
+  background:var(--fill-b);color:#fff;font-family:inherit;font-size:15px;font-weight:600;
+  cursor:pointer;box-shadow:0 12px 26px -14px rgba(61,91,247,.75)}
+.crow{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;
+  padding:14px 16px;margin-top:12px;box-shadow:0 6px 20px -16px rgba(35,45,90,.26)}
+.crow .cav{width:44px;height:44px;border-radius:14px;background:var(--blue-soft);color:var(--blue-d);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.crow .ci{flex:1;min-width:0}
+.crow .cn2{font-size:15px;font-weight:600;display:flex;align-items:center;gap:7px}
+.crow .rel{font-size:11px;font-weight:600;color:var(--blue-d);background:var(--blue-soft);
+  border-radius:9px;padding:2px 8px;white-space:nowrap}
+.crow .cp{font-size:12.5px;color:var(--ink2);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .csend{flex:none;height:34px;padding:0 14px;border-radius:17px;border:none;
+  background:var(--blue-soft);color:var(--blue-d);font-family:inherit;font-size:12.5px;
+  font-weight:600;cursor:pointer}
+.crow .cdel{flex:none;background:none;border:none;cursor:pointer;color:#7C8494;padding:6px;
+  display:flex;align-items:center;justify-content:center;min-width:40px;min-height:40px}
+.crow .del:active{color:var(--red)}
+.addmore{margin-top:22px;flex:none}
+
+/* ---------- Bottom sheet · add contact ---------- */
+.sheet{position:absolute;left:0;right:0;top:0;bottom:0;z-index:96;display:none;
+  background:rgba(18,22,40,.34);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.sheet.on{display:block}
+.sheetcard{position:absolute;left:0;right:0;bottom:0;background:var(--card);
+  border-radius:26px 26px 0 0;padding:22px 22px 26px;
+  box-shadow:0 -18px 50px -24px rgba(25,35,80,.5);animation:slideUp .28s ease both;
+  max-height:90%;overflow-y:auto;scrollbar-width:none}
+.sheetcard::-webkit-scrollbar{display:none}
+@keyframes slideUp{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.shhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sht{font-size:19px;font-weight:700}
+.shx{width:36px;height:36px;border-radius:50%;border:none;background:var(--row);color:var(--ink2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.flab{font-size:13px;color:var(--ink2);margin-top:20px}
+.fin{width:100%;height:50px;margin-top:9px;border-radius:14px;border:1px solid #ECEEF3;
+  background:#F7F8FB;padding:0 15px;font-family:inherit;font-size:14.5px;color:var(--ink);outline:none}
+.fin:focus{border-color:rgba(74,108,250,.5);background:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:11px}
+.chip{height:38px;padding:0 17px;border-radius:19px;border:1px solid #E6E9F2;background:#fff;
+  color:var(--ink);font-family:inherit;font-size:13.5px;cursor:pointer;
+  transition:background .18s,color .18s,border-color .18s}
+.chip.on{background:var(--fill-b);border-color:var(--fill-b);color:#fff;font-weight:600}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:24px}
+.swt{font-size:14.5px;font-weight:600}
+.sws{font-size:12px;color:var(--ink2);margin-top:5px}
+.tsw{width:52px;height:31px;border-radius:16px;border:none;background:var(--track);cursor:pointer;
+  position:relative;flex:none;transition:background .25s;padding:0}
+.tsw:after{content:"";position:absolute;top:3px;left:3px;width:25px;height:25px;border-radius:50%;
+  background:#fff;transition:transform .25s;box-shadow:0 2px 6px rgba(20,30,60,.22)}
+.tsw.on{background:#0E9E69}
+.tsw.on:after{transform:translateX(21px)}
+.fbtns{display:flex;gap:12px;margin-top:26px}
+.fbtn{flex:1;height:50px;border-radius:15px;border:none;background:var(--row);color:var(--ink);
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.fbtn.pri{background:var(--fill-b);color:#fff;box-shadow:0 10px 22px -14px rgba(61,91,247,.7)}
+.fbtn.pri:disabled{background:#C9D2EE;color:#fff;box-shadow:none;cursor:not-allowed}
+
+/* Night mode additions for the new blocks */
+body.night .locok{background:#1E3A2C;color:#4FD3A0}
+body.night .chip{background:#22252F;border-color:#333846;color:var(--ink)}
+body.night .chip.on{background:var(--fill-b);border-color:var(--fill-b);color:#fff}
+body.night .fin{background:#191C25;border-color:rgba(255,255,255,.11);color:var(--ink)}
+body.night .fin:focus{background:#1E222C}
+body.night .sheetcard{background:#1B1E27}
+body.night .sosring{border-color:rgba(255,77,82,.20)}
+body.night .sosr2{border-color:rgba(255,77,82,.32)}
+body.night .sosprog .tr{stroke:rgba(255,106,111,.18)}
+body.night .etile svg{color:#7C8494}
+body.night .fbtn.pri:disabled{background:#39415C}
+body.night .crow .cav,body.night .crow .csend,body.night .crow .rel,body.night .mib{
+  background:var(--blue-soft);color:var(--blue-d)}
+
+/* ---------- 5. Awareness log + Awareness Alert (v9) ---------- */
+/* the guard screen gains a row, so these heights were re-tuned and measured */
+.ghead{margin-top:74px;height:52px}
+.soszone{margin-top:22px;height:194px}
+.devrow{margin-top:10px}
+.locline{margin-top:12px}
+.locbar2{margin-top:10px}
+.minirow{margin-top:15px;padding:13px 16px}
+.gbot{height:4px}
+
+/* guard entry: one size down from the two cards below so it does not fight them */
+/* buttons carry a UA outline by default; without border:none it shows as a black ring on the white card */
+.minirow.compact{margin-top:10px;padding:9px 14px;cursor:pointer;text-align:left;
+  font-family:inherit;border:none;-webkit-tap-highlight-color:transparent}
+.minirow.compact:active{transform:scale(.99)}
+.minirow.compact .tile{width:38px;height:38px;border-radius:12px}
+.minirow.compact .tile .ic{width:19px;height:19px}
+.tile.a{background:#FFF3E0;color:#B85C00}
+body.night .tile.a{background:#3A2A12;color:#FAC775}
+.awchev{width:16px;height:16px;flex:none;fill:none;stroke:var(--ink2);stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* buttons carry a UA outline by default; without border:none it shows as a black ring on the white card */
+#scAware{padding:0 var(--pad) 0}
+#scAware>.gback{flex:none;margin-top:74px}
+.awhead{margin-top:12px;flex:none}
+.awtitle{font-size:20px;font-weight:700;color:var(--ink);line-height:1.25}
+.awsub{font-size:12px;color:var(--ink2);margin-top:5px}
+.awlist{margin-top:16px;flex:none}
+.awitem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--card);border-radius:18px;padding:13px 15px;margin-top:10px;border:none;
+  font-family:inherit;box-shadow:0 6px 22px -16px rgba(25,35,80,.5);cursor:pointer}
+.awitem .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.awitem .dot.warn{background:#EF9F27}
+.awitem .dot.ok{background:var(--green)}
+.awitem .dot.call{background:var(--blue)}
+.awitem .dot.al{background:var(--red)}
+.awitem .awm{flex:1;min-width:0}
+.awitem .awt{display:block;font-size:14.5px;font-weight:600;color:var(--ink)}
+.awitem .aws{display:block;font-size:12px;color:var(--ink2);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.awitem .awtag{flex:none;font-size:11.5px;padding:4px 9px;border-radius:9px;
+  background:var(--blue-soft);color:var(--blue-d)}
+.awfoot{font-size:11.5px;color:var(--ink2);line-height:1.6;margin-top:12px;text-align:center;flex:none}
+
+/* the four colours of the abstract illustration follow the theme; otherwise the pale wedge glares in night mode */
+#bnrAware{position:absolute;left:12px;right:12px;top:56px;z-index:120;
+  display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:18px;
+  background:var(--card);
+  border:none;font-family:inherit;text-align:left;cursor:pointer;
+  transform:translateY(calc(-100% - 60px));
+  transition:transform .38s cubic-bezier(.2,.9,.25,1),box-shadow .38s ease}
+/* the shadow exists only while the banner is on screen; a hidden banner would otherwise smear a soft dark band across the top */
+#bnrAware.on{transform:translateY(0);box-shadow:0 14px 34px -14px rgba(25,35,80,.55)}
+#bnrAware .bi{width:34px;height:34px;border-radius:11px;background:#FFF3E0;color:#B85C00;
+  display:flex;align-items:center;justify-content:center;flex:none}
+body.night #bnrAware .bi{background:#3A2A12;color:#FAC775}
+#bnrAware .bm{flex:1;min-width:0}
+#bnrAware .bt{display:block;font-size:13.5px;font-weight:600;color:var(--ink)}
+#bnrAware .bs{display:block;font-size:11.5px;color:var(--ink2);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Awareness alert card */
+.awhead2{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.awhead2 .d{width:8px;height:8px;border-radius:50%;background:#EF9F27;flex:none}
+.awhead2 .l{font-size:12px;color:var(--ink2)}
+.awtitle2{font-size:19px;font-weight:700;color:var(--ink);line-height:1.3}
+.awsub2{font-size:12.5px;color:var(--ink2);margin-top:5px}
+.awframe{margin-top:14px;border-radius:14px;background:var(--row);padding:10px}
+.awframe svg{display:block;width:100%;height:118px}
+/* the four colours of the abstract illustration follow the theme; otherwise the pale wedge glares in night mode */
+.awframe .fwedge{fill:#EEEDFE;stroke:#AFA9EC}
+.awframe .fline{stroke:#888780}
+.awframe .fsub{fill:#888780}
+.awframe .fme{fill:#534AB7}
+body.night .awframe .fwedge{fill:#232842;stroke:#6E76C8}
+body.night .awframe .fline{stroke:#6B7280}
+body.night .awframe .fsub{fill:#9AA0AE}
+body.night .awframe .fme{fill:#8CA3FF}
+.awtag.t-ok{background:rgba(14,158,105,.14);color:var(--green)}
+.awtag.t-call{background:var(--blue-soft);color:var(--blue-d)}
+.awtag.t-al{background:rgba(236,22,22,.12);color:var(--red)}
+.awtag.t-new{background:#FFF3E0;color:#B85C00}
+body.night .awtag.t-ok{background:rgba(14,158,105,.24)}
+body.night .awtag.t-al{background:rgba(255,77,82,.22)}
+body.night .awtag.t-new{background:#3A2A12;color:#FAC775}
+.awmetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.awmetric{background:var(--row);border-radius:12px;padding:9px 8px;text-align:center}
+.awmetric .k{font-size:11px;color:var(--ink2)}
+.awmetric .v{font-size:14px;font-weight:600;color:var(--ink);margin-top:3px}
+.awexits{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
+.awexit{height:46px;border-radius:14px;border:none;background:var(--row);color:var(--ink);
+  font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+.awexit.pri{background:linear-gradient(180deg,var(--fill-a),var(--fill-b));color:#fff}
+.awexit.dan{background:var(--red);color:#fff}
+.awdone{display:none;margin-top:14px;padding:12px 14px;border-radius:13px;
+  background:var(--blue-soft);color:var(--blue-d);font-size:13px;font-weight:600}
+.awfoot2{font-size:11.5px;color:var(--ink2);line-height:1.55;margin-top:12px}
+
+/* 2. Bluetooth linked (new in v9): the screen between found and paired */
+.hero .pulse{position:absolute;width:114px;height:114px;border-radius:50%;
+  border:1.5px solid rgba(61,91,247,.34);animation:linkpl 1.9s ease-out infinite}
+@keyframes linkpl{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.62);opacity:0}}
+body.night .hero .pulse{border-color:rgba(120,150,255,.40)}
+.btg{width:50px;height:50px;fill:none;stroke:var(--blue);stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.linkhint{margin-top:16px;flex:none;text-align:center;font-size:12.5px;color:var(--ink2)}
+#scLink .padBot{height:100px}
+
+</style>
+
+<style>
+/* English copy runs longer than Chinese: only minimal layout widening, no colour or structure change */
+.mib{font-size:12px;padding:0 12px}
+.edesc{font-size:13px}
+.ptitle2{font-size:25px}
+.chip{padding:0 14px;font-size:13px}
+.ebtn{padding:0 28px}
+.crow .csend{padding:0 12px}
+
+/* ---------- 4. Call (v8: primary action / settings / script) ---------- */
+/* this screen is the scroll container, so cards need flex:none or expanding the script squashes them */
+#scCall>.card{flex:none}
+
+/* 1. Primary action: tightened spacing, one clear entry point */
+.callhero{background:linear-gradient(180deg,#F4F3FE,#EEEDFB);padding:18px 20px 16px}
+body.night .callhero{background:linear-gradient(180deg,#1B1F2E,#181B28)}
+.bigbtn{width:90px;height:90px;
+  box-shadow:0 14px 30px -12px rgba(61,91,247,.55),0 0 0 9px rgba(74,108,250,.09)}
+.bigbtn svg{width:36px;height:36px}
+.calltitle{margin-top:12px}
+.callsub{margin-top:5px;font-size:12.5px;line-height:1.5;max-width:250px}
+.callnow{margin-top:14px;background:linear-gradient(180deg,var(--fill-a),var(--fill-b));
+  color:#fff;box-shadow:0 12px 26px -14px rgba(61,91,247,.65)}
+.callnow:active{transform:scale(.99)}
+.callnow svg{width:18px;height:18px}
+
+/* 2. Settings: read-only by default, the input only appears after tapping Edit */
+.setcard,.scriptcard{margin-top:8px}
+.shead{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  width:100%;background:none;border:none;padding:0;font-family:inherit;text-align:left}
+.shtitle{font-size:16px;font-weight:700;color:var(--ink)}
+.editbtn{background:none;border:none;padding:2px 0;font-family:inherit;font-size:14px;
+  color:var(--blue-d);cursor:pointer}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:42px;margin-top:3px;border-top:1px solid var(--line)}
+.shead+.srow{border-top:none}
+.slab{font-size:14px;color:var(--ink2)}
+.sval{font-size:15px;font-weight:600;color:var(--ink)}
+.tin2{display:none;width:132px;height:34px;padding:0 10px;border-radius:10px;
+  border:1px solid rgba(74,108,250,.4);background:var(--card);color:var(--ink);
+  font-family:inherit;font-size:15px;font-weight:600;text-align:right;outline:none}
+.tin2:focus{border-color:var(--blue)}
+body.night .tin2{background:#191C25;border-color:rgba(140,163,255,.42)}
+
+/* 4. Length: the tick row shares the track box (thumb is 24 wide so the travel is inset 12 each side)
+   otherwise the ticks sit 12px off the thumb */
+.durwrap{padding:0}
+.durwrap input[type=range]{margin-top:11px}
+.ticks{position:relative;height:18px;margin:9px 12px 0}
+.tick{position:absolute;top:0;transform:translateX(-50%);background:none;border:none;padding:0;
+  font-family:inherit;font-size:11px;color:var(--ink2);white-space:nowrap;cursor:pointer}
+.tick.on{color:var(--blue-d);font-weight:700}
+
+/* 3. Script: collapsed by default, its own block so it never mixes with settings */
+.shtoggle{cursor:pointer}
+.chev{width:18px;height:18px;flex:none;fill:none;stroke:var(--ink2);stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;transition:transform .22s ease}
+.scriptcard.open .chev{transform:rotate(180deg)}
+.ssub{font-size:12.5px;color:var(--ink2);margin-top:4px}
+.sbody{display:none}
+.scriptcard.open .sbody{display:block}
+/* the script box is a fixed 4-line height so the footnote stays clear of the nav bar */
+.tarea{min-height:0;height:101px;padding:10px 13px;font-size:13.5px;line-height:1.5;overflow-y:auto}
+.snote{font-size:11.5px;color:var(--ink2);line-height:1.55;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="island"></div>
+  <div class="sb">
+    <span class="t">9:41</span>
+    <span class="r">
+      <svg class="ic s" viewBox="0 0 24 24" style="stroke-width:0;fill:currentColor">
+        <rect x="2" y="14" width="3" height="6" rx="1"/><rect x="7" y="11" width="3" height="9" rx="1"/>
+        <rect x="12" y="8" width="3" height="12" rx="1"/><rect x="17" y="5" width="3" height="15" rx="1"/></svg>
+      <svg class="ic s" viewBox="0 0 24 24"><path d="M4.5 10.5a13 13 0 0 1 15 0M7.5 14a8.5 8.5 0 0 1 9 0"/><circle cx="12" cy="18.5" r="1.3" style="fill:currentColor;stroke:none"/></svg>
+      <span style="width:23px;height:12px;border:1.5px solid rgba(23,24,28,.32);border-radius:3.5px;position:relative;display:block">
+        <i style="position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:14px;background:#17181C;border-radius:1.5px;display:block"></i>
+      </span>
+    </span>
+  </div>
+
+  <!-- ============ 1. Searching ============ -->
+  <section class="screen on" id="scSearch">
+    <button class="theme" data-act="theme" aria-label="Switch to night mode" title="Day mode">
+      <svg class="ic s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M2.4 12h2.3M19.3 12h2.3M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg>
+    </button>
+    <div class="scBrand">
+      <div class="spTop"></div>
+      <div class="brand">AURA <i>Companion</i></div>
+      <div class="tag">Company you can&#39;t see</div>
+      <div class="hero">
+        <div class="halo"></div>
+        <div class="ringoc r1"></div><div class="ringoc r2"></div><div class="ringoc r3"></div>
+        <div class="disc">
+          <svg class="spin" viewBox="0 0 44 44"><circle cx="22" cy="22" r="15"/></svg>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="card cardline">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="tile">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M7 7l9 9-2.4 2.4a5 5 0 0 1-7-7z"/><path d="M11 5.5 12.8 3.7M18.5 13 20.3 11.2M14 4l6 6"/></svg>
+          </div>
+          <div>
+            <div class="ct">Searching for your Aura Clip</div>
+            <div class="cs">Keep Bluetooth turned on</div>
+          </div>
+        </div>
+      </div>
+      <button class="pillbtn cta2" data-act="rescan">Search again</button>
+      <div class="padBot"></div>
+    </div>
+  </section>
+
+
+  <!-- ============ 2. Bluetooth linked ============ -->
+  <section class="screen" id="scLink">
+    <button class="theme" data-act="theme" aria-label="Switch to night mode" title="Day mode">
+      <svg class="ic s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M2.4 12h2.3M19.3 12h2.3M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg>
+    </button>
+    <div class="scBrand">
+      <div class="spTop"></div>
+      <div class="brand">AURA <i>Companion</i></div>
+      <div class="tag">Company you can&#39;t see</div>
+      <div class="hero">
+        <div class="halo"></div>
+        <div class="ringoc r1"></div><div class="ringoc r2"></div><div class="ringoc r3"></div>
+        <div class="pulse"></div>
+        <div class="disc">
+          <svg class="btg" viewBox="0 0 24 24"><path d="M12 3l5.5 5.5L6.5 15.5 12 21M12 3v18"/></svg>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="card cardline">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="tile">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M12 3l5.5 5.5L6.5 15.5 12 21M12 3v18"/></svg>
+          </div>
+          <div>
+            <div class="ct">Aura Clip connected</div>
+            <div class="cs">Bluetooth link is up · all sensing data stays on this phone</div>
+          </div>
+        </div>
+        <div class="pairrow">
+          <svg class="ic s" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h2.5v4.5H5A1 1 0 0 1 4 18.5zM20 15h-2.5v4.5H19a1 1 0 0 0 1-1z"/></svg>
+          <span>Signal good · Battery 87%</span>
+        </div>
+      </div>
+      <div class="linkhint">Finishing the pairing…</div>
+      <div class="padBot"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. Paired ============ -->
+  <section class="screen" id="scPaired">
+    <button class="theme" data-act="theme" aria-label="Switch to night mode" title="Day mode">
+      <svg class="ic s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.3M12 19.3v2.3M2.4 12h2.3M19.3 12h2.3M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg>
+    </button>
+    <div class="scBrand">
+      <div class="spTop"></div>
+      <div class="brand">AURA <i>Companion</i></div>
+      <div class="tag">Company you can&#39;t see</div>
+      <div class="hero">
+        <div class="halo"></div>
+        <div class="ringoc r1"></div><div class="ringoc r2"></div><div class="ringoc r3"></div>
+        <div class="disc">
+          <svg class="check" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="3.4"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="28" cy="28" r="21" stroke-width="2.8"/><path d="M19 28.5 25.5 35 37 22.5"/></svg>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <div class="card cardline">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="tile">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M7 7l9 9-2.4 2.4a5 5 0 0 1-7-7z"/><path d="M11 5.5 12.8 3.7M18.5 13 20.3 11.2M14 4l6 6"/></svg>
+          </div>
+          <div>
+            <div class="ct">Paired</div>
+          </div>
+        </div>
+        <div class="pairrow">
+          <svg class="ic s" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h2.5v4.5H5A1 1 0 0 1 4 18.5zM20 15h-2.5v4.5H19a1 1 0 0 0 1-1z"/></svg>
+          <span>Clip battery 87% · Connection stable</span>
+        </div>
+      </div>
+      <button class="pillbtn cta2" data-act="startGuard">Start Guard</button>
+      <div class="padBot"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. Guard (SOS) ============ -->
+  <section class="screen scroll" id="scGuard">
+    <div class="scGuard">
+      <div class="ghead">
+        <button class="gback" data-act="back" aria-label="Disconnect this clip">
+          <svg class="ic s" viewBox="0 0 24 24"><path d="M14.5 4.5H18a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-3.5"/><path d="M9.5 8.2 5.7 12l3.8 3.8"/><path d="M5.7 12H15"/></svg>
+        </button>
+        <div class="ghbox">
+          <div class="ghtt">Aura Companion Guard</div>
+          <div class="ghts">Watching over you, always</div>
+        </div>
+      </div>
+
+
+      <div class="soszone">
+        <div class="sosring sosr1"></div>
+        <div class="sosring sosr2"></div>
+        <svg class="sosprog" viewBox="0 0 180 180" aria-hidden="true">
+          <circle class="tr" cx="90" cy="90" r="88"/>
+          <circle class="pr" id="sosProg" cx="90" cy="90" r="88"/>
+        </svg>
+        <button class="sosbig" id="sosBtn" aria-label="Hold for 3 seconds to sound the alarm">
+          <span class="sosbig-t">SOS</span>
+          <span class="sosbig-s" id="sosBigSub">Hold 3 sec</span>
+        </button>
+      </div>
+
+      <div class="devrow">
+        <span class="mchip" id="battChip">
+          <svg class="ic s" viewBox="0 0 24 24"><rect x="1.6" y="7" width="17.8" height="10" rx="3"/><path d="M21.8 10.6v2.8"/><rect x="4" y="9.6" width="11.8" height="4.8" rx="1.6" style="fill:currentColor;stroke:none"/></svg>
+          <b>87</b>%
+        </span>
+        <span class="mchip" id="devInfo"><span class="dt"></span><span id="devText">Connected · Guard off</span></span>
+      </div>
+
+      <div class="locline">
+        <span class="locok"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.6l4.6 4.6L19 7.4"/></svg>Location ready</span>
+        <span class="locaddr">Tuanjie Road, Yuexiu, Guangzhou</span>
+      </div>
+      <button class="locbar2" data-act="relocate">
+        <svg class="ic s" viewBox="0 0 24 24"><path d="M20 10.5c0 5.5-8 11-8 11s-8-5.5-8-11a8 8 0 0 1 16 0z"/><circle cx="11.5" cy="10.2" r="2.6"/></svg>
+        <span class="ad">Tuanjie Road, Yuexiu, Guangzhou</span>
+        <span class="set">Default</span>
+      </button>
+
+      <div class="minirow">
+        <div class="tile b">
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M3.4 19.6a5.8 5.8 0 0 1 11.2 0"/><circle cx="17.4" cy="9.4" r="2.6"/><path d="M15.6 14.8a5 5 0 0 1 5 4.6"/></svg>
+        </div>
+        <div class="mi">
+          <div class="mt">Emergency contacts</div>
+          <div class="ms" id="secSummary">No contacts yet</div>
+        </div>
+        <button class="mib" data-go="contact">Manage</button>
+      </div>
+
+      <div class="minirow">
+        <div class="tile b">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+        </div>
+        <div class="mi">
+          <div class="mt">Simulated call</div>
+          <div class="ms" id="callSummary">45 sec call · Family</div>
+        </div>
+        <button class="mib" data-go="call">Set up</button>
+      </div>
+
+      <button class="minirow compact" data-go="aware">
+        <div class="tile a"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.2"/><path d="M12 12 18.6 7.4"/></svg></div>
+        <div class="mi">
+          <div class="mt">Awareness log</div>
+          <div class="ms" id="awareSummary">1 entry today</div>
+        </div>
+        <svg class="awchev" viewBox="0 0 24 24"><path d="m9 5.5 6.5 6.5L9 18.5"/></svg>
+      </button>
+      <div class="gbot"></div>
+    </div>
+  </section>
+
+  <!-- ============ 4. Call ============ -->
+  <section class="screen scroll" id="scCall">
+    <div class="spTop2"></div>
+
+    <!-- 1. Primary action -->
+    <div class="card callhero">
+      <button class="bigbtn" data-act="callNow" aria-label="Start simulated call">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+      </button>
+      <div class="calltitle">Simulated call</div>
+      <div class="callsub">Answer to see the simulated call screen</div>
+      <button class="callnow" data-act="callNow">
+        <svg class="ic s" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+        <span id="callNowLabel">Start simulated call</span>
+      </button>
+    </div>
+
+    <!-- 2. Settings -->
+    <div class="card setcard">
+      <div class="shead">
+        <span class="shtitle">Call settings</span>
+        <button class="editbtn" id="editBtn" data-act="toggleEdit">Edit</button>
+      </div>
+      <div class="srow">
+        <span class="slab">Caller</span>
+        <span class="sval" id="nameVal">Family</span>
+        <input class="tin2" id="inName" value="Family" maxlength="10" aria-label="Caller">
+      </div>
+      <div class="srow">
+        <span class="slab">Call length</span>
+        <span class="sval" id="durLabel">45 sec</span>
+      </div>
+      <div class="durwrap">
+        <input type="range" id="inDur" min="15" max="60" step="5" value="45" aria-label="Call length">
+        <div class="ticks">
+          <button class="tick" data-sec="15" style="left:0%">15 sec</button>
+          <button class="tick" data-sec="30" style="left:33.333%">30 sec</button>
+          <button class="tick" data-sec="45" style="left:66.667%">45 sec</button>
+          <button class="tick" data-sec="60" style="left:100%">60 sec</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Script (collapsed by default) -->
+    <div class="card scriptcard" id="scriptCard">
+      <button class="shead shtoggle" id="scriptToggle" data-act="toggleScript" aria-expanded="false">
+        <span class="shtitle">Call script</span>
+        <svg class="chev" viewBox="0 0 24 24"><path d="m6 9.5 6 6 6-6"/></svg>
+      </button>
+      <div class="ssub" id="scriptSub">Preview the script · 4 lines</div>
+      <div class="sbody">
+        <textarea class="tarea" id="inLines" rows="4">Hey, where are you?
+I'm almost at the gate, take your time.
+Don't hang up, I'll keep talking.
+Oh, I can see you now.</textarea>
+        <div class="snote">The voice is generated on the spot, not pre-recorded.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. Contacts ============ -->
+  <section class="screen scroll" id="scContact">
+    <div class="spTop4"></div>
+    <div class="ptitle2">Emergency contacts</div>
+    <div class="psub2">Your SOS message is sent to these contacts</div>
+
+    <div class="emptybox" id="emptyBox">
+      <div class="etile">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3 19.6a6 6 0 0 1 12 0"/><circle cx="17.6" cy="9.4" r="2.7"/><path d="M15.8 14.9a5.2 5.2 0 0 1 5.4 4.7"/></svg>
+      </div>
+      <div class="etitle">No contacts yet</div>
+      <div class="edesc">Add someone you trust — family or a close friend.<br>They are notified first in an emergency</div>
+      <button class="ebtn" data-act="openAdd">Add your first contact</button>
+    </div>
+
+    <div id="contactList"></div>
+    <div class="addmore" id="addMore" style="display:none">
+      <button class="pillbtn blue" data-act="openAdd">Add contact</button>
+    </div>
+  </section>
+
+  <!-- ============ Bottom navigation (three tabs only) ============ -->
+  <nav class="nav hide" id="nav">
+    <button class="nb on" data-go="guard">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="3.4"/><circle cx="12" cy="12" r="1" style="fill:currentColor;stroke:none"/></svg>
+      <span>Guard</span>
+    </button>
+    <button class="nb" data-go="call">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+      <span>Call</span>
+    </button>
+    <button class="nb" data-go="contact">
+      <svg class="ic" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M3 19.6a6 6 0 0 1 12 0"/><circle cx="17.6" cy="9.4" r="2.7"/><path d="M15.8 14.9a5.2 5.2 0 0 1 5.4 4.7"/></svg>
+      <span>Contacts</span>
+    </button>
+  </nav>
+
+
+  <!-- ============ 5. Awareness log ============ -->
+  <section class="screen scroll" id="scAware">
+    <button class="gback" data-go="guard" aria-label="Back"><svg class="ic" viewBox="0 0 24 24"><path d="M15 5.5 8 12l7 6.5"/></svg></button>
+    <div class="awhead">
+      <div class="awtitle">Awareness log</div>
+      <div class="awsub">A log of everything the clip has sensed</div>
+    </div>
+    <div class="awlist" id="awList"></div>
+    <div class="awfoot">Only the time and place are saved — never any footage</div>
+    <div class="gbot"></div>
+  </section>
+
+
+  <!-- ============ Overlay B - awareness banner (non-blocking) ============ -->
+  <button id="bnrAware" data-act="openBanner" aria-label="Open awareness alert">
+    <span class="bi"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4.2 21 19.6H3z"/><path d="M12 10.2v3.9"/><circle cx="12" cy="16.9" r="1" style="fill:currentColor;stroke:none"/></svg></span>
+    <span class="bm">
+      <span class="bt" id="bnrT">Awareness alert</span>
+      <span class="bs" id="bnrS">Someone has been following behind · tap to check</span>
+    </span>
+    <svg class="awchev" viewBox="0 0 24 24"><path d="m9 5.5 6.5 6.5L9 18.5"/></svg>
+  </button>
+
+
+  <!-- ============ Bottom sheet - awareness alert ============ -->
+  <div class="sheet" id="ovAware">
+    <div class="sheetcard awcard">
+      <div class="shhead">
+        <div class="sht">Awareness alert</div>
+        <button class="shx" data-act="closeAware" aria-label="Close"><svg class="ic s" viewBox="0 0 24 24"><path d="M6.6 6.6l10.8 10.8M17.4 6.6L6.6 17.4"/></svg></button>
+      </div>
+      <div class="awhead2"><span class="d"></span><span class="l">Just now · the clip has already vibrated once</span></div>
+      <div class="awtitle2" id="awCTitle">Someone has been following behind</div>
+      <div class="awsub2" id="awCSub">21:40 · Tuanjie Road, Yuexiu, Guangzhou</div>
+      <div class="awframe"><svg viewBox="0 0 280 118" role="img" aria-label="abstract illustration of the situation"><path class="fwedge" d="M140 96 L66 26 Q140 4 214 26 Z" stroke-width="0.5"/><circle cx="140" cy="38" r="10" fill="none" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="3 3"/><line class="fline" x1="140" y1="50" x2="140" y2="76" stroke-width="0.5" stroke-dasharray="3 3"/><text class="fsub" x="150" y="66" font-size="11">About 3 m</text><circle class="fme" cx="140" cy="90" r="6"/><path class="fme" d="M127 104 Q140 95 153 104" fill="none" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="awmetrics">
+        <div class="awmetric"><div class="k">Direction</div><div class="v">Behind</div></div>
+        <div class="awmetric"><div class="k">Distance</div><div class="v">About 3 m</div></div>
+        <div class="awmetric"><div class="k">Duration</div><div class="v">40 sec</div></div>
+      </div>
+      <div class="awexits" id="awExits">
+        <button class="awexit" data-act="awareOk">I am fine</button>
+        <button class="awexit pri" data-act="awareCall">Call me</button>
+        <button class="awexit dan" data-act="awareAlarm">Alarm</button>
+      </div>
+      <div class="awdone" id="awDone"></div>
+      <div class="awfoot2">An abstract illustration, not a live view — nothing is recorded</div>
+    </div>
+  </div>
+  <!-- ============ Overlay A · incoming call ============ -->
+  <div class="overlay" id="ovIncoming">
+    <div class="ovlabel">Incoming call</div>
+    <div class="ovav">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+    </div>
+    <div class="ovname" id="ovCaller">Family</div>
+    <div class="ovsub">Aura Companion</div>
+    <div class="ovbtns">
+      <button class="ob" data-act="hangup">
+        <span class="c r"><svg class="ic" viewBox="0 0 24 24" style="width:32px;height:32px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z" transform="rotate(135 12 12)"/></svg></span>
+        <span class="l">Decline</span>
+      </button>
+      <button class="ob" data-act="answer">
+        <span class="c g"><svg class="ic" viewBox="0 0 24 24" style="width:32px;height:32px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span>
+        <span class="l">Answer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Overlay B · on call ============ -->
+  <div class="overlay" id="ovActive">
+    <div class="ovtop">
+      <div class="st">On call</div>
+      <div class="nm" id="ovActiveName">Family</div>
+      <div class="tm" id="callTimer">00:45</div>
+      <div class="callwave"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="subwrap" id="subWrap"></div>
+    <div class="ovhint">Captions play the caller’s lines · you don’t need to keep talking</div>
+    <div class="ovbtns" style="margin-top:0;margin-bottom:48px">
+      <button class="ob" id="ovSpk" data-act="toggleSpk">
+        <span class="c b"><svg class="ic" viewBox="0 0 24 24" style="width:30px;height:30px"><path d="M11 5 6.5 8.8H3v6.4h3.5L11 19z"/><path d="M15.5 9.2a4.4 4.4 0 0 1 0 5.6M18.4 6.4a8.4 8.4 0 0 1 0 11.2"/></svg></span>
+        <span class="l" id="spkLabel">Speaker · On</span>
+      </button>
+      <button class="ob" data-act="hangup">
+        <span class="c r"><svg class="ic" viewBox="0 0 24 24" style="width:32px;height:32px"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.8.7a2 2 0 0 1 1.7 2z" transform="rotate(135 12 12)"/></svg></span>
+        <span class="l">End</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Confirm dialog · send location ============ -->
+  <div class="modal" id="ovSend">
+    <div class="mcard">
+      <div class="mtile">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M20 10.5c0 5.5-8 11-8 11s-8-5.5-8-11a8 8 0 0 1 16 0z"/><circle cx="11.5" cy="10.2" r="2.6"/></svg>
+      </div>
+      <div class="mtitle" id="sendTitle">Send location to “Mum”</div>
+      <div class="mdesc" id="sendDesc">Your live location will be sent to Mum<br>They get one message with your location</div>
+      <div class="mbtns">
+        <button class="mbtn" data-act="sendCancel">Cancel</button>
+        <button class="mbtn pri" data-act="sendOk">Send</button>
+      </div>
+    </div>
+  </div>
+  <!-- ============ Bottom sheet · add contact ============ -->
+  <div class="sheet" id="ovAdd">
+    <div class="sheetcard">
+      <div class="shhead">
+        <div class="sht">Add contact</div>
+        <button class="shx" data-act="closeAdd" aria-label="Close">
+          <svg class="ic s" viewBox="0 0 24 24"><path d="M6.6 6.6l10.8 10.8M17.4 6.6L6.6 17.4"/></svg>
+        </button>
+      </div>
+      <div class="flab">Name</div>
+      <input class="fin" id="cName" placeholder="Enter name" maxlength="10">
+      <div class="flab">Phone number</div>
+      <input class="fin" id="cPhone" placeholder="Enter phone number" maxlength="15" inputmode="tel">
+      <div class="flab">Relationship</div>
+      <div class="chips" id="relChips">
+        <button class="chip on" data-rel="Bestie">Bestie</button>
+        <button class="chip" data-rel="Mum">Mum</button>
+        <button class="chip" data-rel="Dad">Dad</button>
+        <button class="chip" data-rel="Boyfriend">Boyfriend</button>
+        <button class="chip" data-rel="Husband">Husband</button>
+        <button class="chip" data-rel="Roommate">Roommate</button>
+        <button class="chip" data-rel="Colleague">Colleague</button>
+        <button class="chip" data-rel="Other">Other</button>
+      </div>
+      <div class="swrow">
+        <div>
+          <div class="swt">Set as primary contact</div>
+          <div class="sws">Notified first when SOS is triggered</div>
+        </div>
+        <button class="tsw" id="priSw" role="switch" aria-checked="false" aria-label="Set as primary contact"></button>
+      </div>
+      <div class="fbtns">
+        <button class="fbtn" data-act="closeAdd">Cancel</button>
+        <button class="fbtn pri" id="doAddBtn" data-act="doAdd" disabled>Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ================= State ================= */
+var SCR=['search','link','paired','guard','call','contact','aware'];
+var TABS=['guard','call','contact'];
+var $=function(id){return document.getElementById(id);};
+
+/* ================= Day / night ================= */
+var SUN='<svg class="ic s" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/>'
+  +'<path d="M12 2.4v2.3M12 19.3v2.3M2.4 12h2.3M19.3 12h2.3M5.2 5.2l1.7 1.7M17.1 17.1l1.7 1.7'
+  +'M18.8 5.2l-1.7 1.7M6.9 17.1l-1.7 1.7"/></svg>';
+var MOON='<svg class="ic s" viewBox="0 0 24 24">'
+  +'<path d="M20 14.6A8.6 8.6 0 0 1 9.4 4a8.6 8.6 0 1 0 10.6 10.6z"/></svg>';
+var night=false;
+function setNight(on){
+  night=!!on;
+  document.body.classList.toggle('night',night);
+  var bs=document.querySelectorAll('.theme');
+  for(var i=0;i<bs.length;i++){
+    bs[i].innerHTML = night ? MOON : SUN;
+    bs[i].setAttribute('aria-label', night?'Switch to day mode':'Switch to night mode');
+    bs[i].title = night?'Night mode':'Day mode';
+  }
+  paintRange();
+}
+
+var state={
+  guardOn:false,
+  caller:'Family',
+  secs:45,
+  lines:["Hey, where are you?","I'm almost at the gate, take your time.",
+         "Don't hang up, I'll keep talking.","Oh, I can see you now."],
+  editing:false,
+  contacts:[],
+  rel:'Bestie',
+  pri:false,
+  aware:[{t:'20:12',title:'Someone lingered behind for a while',sub:'Tuanjie Road · lasted 1 min 10 sec',act:'alarm'}],
+  awareShown:false, curAware:null,
+  timeouts:[], intervals:[]
+};
+
+function clearAll(){
+  state.timeouts.forEach(function(t){clearTimeout(t)});
+  state.intervals.forEach(function(t){clearInterval(t)});
+  state.timeouts=[]; state.intervals=[];
+}
+function later(fn,ms){ var t=setTimeout(fn,ms); state.timeouts.push(t); return t; }
+function every(fn,ms){ var t=setInterval(fn,ms); state.intervals.push(t); return t; }
+
+/* ================= Screen switching ================= */
+function go(key){
+  clearAll();
+  SCR.forEach(function(k){ $('sc'+cap(k)).classList.remove('on'); });
+  $('ovIncoming').classList.remove('on');
+  $('ovActive').classList.remove('on');
+  $('ovAware').classList.remove('on');
+  hideBanner();
+  $('sc'+cap(key)).classList.add('on');
+  $('sc'+cap(key)).scrollTop=0;
+
+  var isTab = TABS.indexOf(key)>=0;
+  $('nav').classList.toggle('hide', !isTab);
+  var bs=document.querySelectorAll('.nb');
+  for(var i=0;i<bs.length;i++){
+    bs[i].classList.toggle('on', bs[i].getAttribute('data-go')===key);
+  }
+  if(key==='search'){ later(function(){ go('link'); },2000); }
+  if(key==='link'){ later(function(){ go('paired'); },1600); }
+  if(key==='guard' && state.guardOn && !state.awareShown){ later(showBanner,1200); }
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+/* ================= Guard ================= */
+function renderGuard(){
+  var on=state.guardOn;
+  $('battChip').classList.toggle('on',on);
+  $('devInfo').classList.toggle('on',on);
+  $('devText').textContent = on ? 'Connected · Guard on' : 'Connected · Guard off';
+}
+
+/* ================= Contacts ================= */
+var C_AV='<svg class="ic s" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/>'
+        +'<path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>';
+var C_DEL='<svg class="ic s" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V5.4A1.4 1.4 0 0 1 10.9 4h2.2a1.4 1.4 0 0 1 1.4 1.4V7"/>'
+        +'<path d="M6.5 7l.9 12.1A1.5 1.5 0 0 0 8.9 20.5h6.2a1.5 1.5 0 0 0 1.5-1.4L17.5 7"/></svg>';
+
+function renderContacts(){
+  var has=state.contacts.length>0;
+  $('emptyBox').style.display = has ? 'none' : 'flex';
+  $('addMore').style.display = has ? 'block' : 'none';
+  var h='';
+  state.contacts.forEach(function(c,i){
+    h+='<div class="crow">'
+      +'<div class="cav">'+C_AV+'</div>'
+      +'<div class="ci"><div class="cn2">'+esc(c.n)
+      +(c.pri?'<span class="rel">Primary</span>':'<span class="rel">'+esc(c.rel||'Other')+'</span>')+'</div>'
+      +'<div class="cp">'+esc(c.p)+'</div></div>'
+      +'<button class="csend" data-act="sendLoc" data-i="'+i+'" aria-label="Send location to '+esc(c.n)+'">Send</button>'
+      +'<button class="cdel" data-act="delContact" data-i="'+i+'" aria-label="Delete contact">'+C_DEL+'</button>'
+      +'</div>';
+  });
+  $('contactList').innerHTML=h;
+  var n=state.contacts.length;
+  $('secSummary').textContent = has
+    ? (n+' contact'+(n>1?'s':'')+' · '+state.contacts[0].n
+       +(n>1?' and others':''))
+    : 'No contacts yet';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+/* ================= Add contact · bottom sheet ================= */
+function syncAddBtn(){
+  $('doAddBtn').disabled = $('cName').value.trim().length===0;
+}
+function openAdd(){
+  $('cName').value=''; $('cPhone').value='';
+  state.rel='Bestie'; state.pri=false;
+  $('priSw').classList.remove('on'); $('priSw').setAttribute('aria-checked','false');
+  var cs=document.querySelectorAll('#relChips .chip');
+  for(var i=0;i<cs.length;i++) cs[i].classList.toggle('on', i===0);
+  syncAddBtn();
+  $('ovAdd').classList.add('on');
+}
+function closeAdd(){ $('ovAdd').classList.remove('on'); }
+function doAdd(){
+  var n=$('cName').value.trim();
+  if(!n) return;
+  var p=$('cPhone').value.trim();
+  if(state.pri) state.contacts.forEach(function(x){ x.pri=false; });
+  state.contacts.push({n:n, p:p||'No number', rel:state.rel, pri:state.pri});
+  closeAdd(); renderContacts();
+  toast('Added '+n);
+}
+$('cName').addEventListener('input',syncAddBtn);
+$('cPhone').addEventListener('input',syncAddBtn);
+$('priSw').onclick=function(){
+  var on=this.classList.toggle('on');
+  this.setAttribute('aria-checked', on?'true':'false');
+  state.pri=on;
+};
+$('ovAdd').addEventListener('click',function(e){ if(e.target===this) closeAdd(); });
+
+/* ================= Send location · confirm dialog ================= */
+var sendIdx=-1, toastT=null;
+function openSend(i){
+  var c=state.contacts[i]; if(!c) return;
+  sendIdx=i;
+  $('sendTitle').textContent='Send location to “'+c.n+'”';
+  $('sendDesc').innerHTML='Your live location will be sent to '+esc(c.n)+' ('+esc(c.p)+')<br>They get one message with your location';
+  $('ovSend').classList.add('on');
+}
+function closeSend(){ $('ovSend').classList.remove('on'); sendIdx=-1; }
+function toast(msg){
+  var t=$('toast'); t.textContent=msg; t.classList.add('on');
+  if(toastT){ clearTimeout(toastT); toastT=null; }
+  toastT=setTimeout(function(){ t.classList.remove('on'); },2200);
+}
+/* Tap the dimmed area to close (taps inside the card do not) */
+$('ovSend').addEventListener('click',function(e){ if(e.target===this) closeSend(); });
+
+/* ================= Incoming call ================= */
+function fmt(s){ s=Math.max(0,s|0); return '00:'+(s<10?'0'+s:s); }
+
+function openIncoming(){
+  $('ovCaller').textContent=state.caller;
+  $('ovIncoming').classList.add('on');
+}
+function startTalk(){
+  $('ovIncoming').classList.remove('on');
+  $('ovActive').classList.add('on');
+  $('ovActiveName').textContent=state.caller;
+  $('subWrap').innerHTML='';
+  clearAll();
+
+  var D=state.secs, n=Math.max(1,state.lines.length), left=D;
+  $('callTimer').textContent=fmt(left);
+  every(function(){
+    left--; $('callTimer').textContent=fmt(left);
+    if(left<=0){ clearAll(); closeCall(); }
+  },1000);
+  state.lines.forEach(function(line,i){
+    later(function(){ addSub(line); }, Math.round(i*(D/n)*1000)+420);
+  });
+}
+function addSub(text){
+  var w=$('subWrap');
+  var d=document.createElement('div');
+  d.className='subline';
+  d.textContent=text;
+  w.appendChild(d);
+  w.scrollTop=w.scrollHeight;
+}
+function closeCall(){
+  clearAll();
+  $('ovActive').classList.remove('on');
+  $('ovIncoming').classList.remove('on');
+}
+
+/* ================= Hold to alarm ================= */
+var C_SOS=552.92, HOLD_MS=3000, holding=false, rafId=null, t0=0;
+function sosFrame(ts){
+  if(!holding) return;
+  if(!t0) t0=ts;
+  var p=Math.min(1,(ts-t0)/HOLD_MS);
+  $('sosProg').style.strokeDashoffset = C_SOS*(1-p);
+  if(p>=1){ fireAlarm(); return; }
+  rafId=requestAnimationFrame(sosFrame);
+}
+function startHold(){
+  if($('sosBtn').classList.contains('done')) return;
+  holding=true; t0=0;
+  rafId=requestAnimationFrame(sosFrame);
+}
+function endHold(){
+  if(!holding) return;
+  holding=false;
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  $('sosProg').style.strokeDashoffset=C_SOS;
+}
+function fireAlarm(){
+  holding=false; t0=0;
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  $('sosProg').style.strokeDashoffset=0;
+  $('sosBtn').classList.add('done');
+  $('sosBigSub').textContent='Alarm active · hold again to stop';
+  toast(state.contacts.length
+    ? 'Alarm triggered. Location sent to '+state.contacts[0].n
+    : 'Alarm triggered · add an emergency contact first');
+}
+function resetAlarm(){
+  $('sosBtn').classList.remove('done');
+  $('sosProg').style.strokeDashoffset=C_SOS;
+  $('sosBigSub').textContent='Hold 3 sec';
+}
+var sb=$('sosBtn');
+sb.addEventListener('pointerdown',function(e){ e.preventDefault();
+  if($('sosBtn').classList.contains('done')){ resetAlarm(); return; }
+  startHold(); });
+sb.addEventListener('pointerup',endHold);
+sb.addEventListener('pointercancel',endHold);
+sb.addEventListener('pointerleave',endHold);
+
+
+/* ================= Awareness Alert ================= */
+var awBnrT=null;
+function awareTag(a){
+  return a==='ok' ? 'I am fine' : (a==='call' ? 'Call made'
+        : (a==='alarm' ? 'Alarm sent' : 'Pending'));
+}
+function awareCls(a){ return a==='ok'?'ok':(a==='call'?'call':(a==='alarm'?'al':'warn')); }
+function renderAware(){
+  var w=$('awList'); w.innerHTML='';
+  state.aware.forEach(function(r,i){
+    var b=document.createElement('button');
+    b.className='awitem';
+    b.setAttribute('data-act','openAware');
+    b.setAttribute('data-idx',String(i));
+    b.innerHTML='<span class="dot '+awareCls(r.act)+'"></span>'
+      +'<span class="awm"><span class="awt">'+esc(r.title)+'</span>'
+      +'<span class="aws">'+esc(r.t+' · '+r.sub)+'</span></span>'
+      +'<span class="awtag t-'+awareCls(r.act)+'">'+awareTag(r.act)+'</span>';
+    w.appendChild(b);
+  });
+  var n=state.aware.length;
+  $('awareSummary').textContent = n ? (n===1 ? '1 entry today' : n+' entries today') : 'No entries yet';
+}
+function pushAware(){
+  if(state.aware[0] && state.aware[0].act==='new') return;
+  var d=new Date(), p=function(x){ return (x<10?'0':'')+x; };
+  state.aware.unshift({t:p(d.getHours())+':'+p(d.getMinutes()),
+                       title:'Someone has been following behind', sub:'Tuanjie Road · lasted 40 sec', act:'new'});
+  renderAware();
+}
+function showBanner(){
+  pushAware();
+  var b=$('bnrAware');
+  $('bnrT').textContent='Awareness alert';
+  $('bnrS').textContent='Someone has been following behind · tap to check';
+  b.classList.add('on');
+  state.awareShown=true;
+  if(awBnrT){ clearTimeout(awBnrT); awBnrT=null; }
+  awBnrT=setTimeout(hideBanner,6000);
+}
+function hideBanner(){
+  var b=$('bnrAware'); if(b) b.classList.remove('on');
+  if(awBnrT){ clearTimeout(awBnrT); awBnrT=null; }
+}
+function openAware(i){
+  state.curAware = (typeof i==='number') ? i : 0;
+  var r=state.aware[state.curAware]; if(!r) return;
+  $('awCTitle').textContent=r.title;
+  $('awCSub').textContent=r.t+' · '+r.sub;
+  $('awExits').style.display = r.act==='new' ? 'grid' : 'none';
+  $('awDone').style.display  = r.act==='new' ? 'none' : 'block';
+  if(r.act!=='new') $('awDone').textContent = (r.act==='ok' ? 'You marked this as "I am fine"'
+        : (r.act==='call' ? 'You chose a simulated call instead' : 'You escalated this to an alarm and shared your location'));
+  $('ovAware').classList.add('on');
+}
+function closeAware(){ $('ovAware').classList.remove('on'); state.curAware=null; }
+$('ovAware').addEventListener('click',function(e){ if(e.target===this) closeAware(); });
+/* three exits: I am fine = file it, Call me = simulated call, Alarm = escalate to hold-to-alarm */
+function awareAct(kind){
+  var i=state.curAware; if(i==null) return;
+  var r=state.aware[i]; if(!r) return;
+  closeAware();
+  if(kind==='ok'){ r.act='ok'; renderAware(); toast('Marked as safe'); }
+  else if(kind==='call'){ r.act='call'; renderAware(); go('call'); later(openIncoming,420); }
+  else { r.act='alarm'; renderAware(); go('guard'); later(function(){ fireAlarm(); },520); }
+}
+
+/* ================= Event delegation ================= */
+document.addEventListener('click',function(e){
+  var t=e.target, nav=t.closest?t.closest('[data-go]'):null;
+  if(nav){ go(nav.getAttribute('data-go')); return; }
+
+  var rel=t.closest?t.closest('[data-rel]'):null;
+  if(rel){
+    var cs=document.querySelectorAll('#relChips .chip');
+    for(var k=0;k<cs.length;k++) cs[k].classList.remove('on');
+    rel.classList.add('on');
+    state.rel=rel.getAttribute('data-rel');
+    return;
+  }
+
+  var el=t.closest?t.closest('[data-act]'):null;
+  if(!el) return;
+  var a=el.getAttribute('data-act');
+  if(a==='rescan'){ go('search'); }
+  else if(a==='startGuard'){ state.guardOn=true; state.awareShown=false; renderGuard(); go('guard'); }
+  else if(a==='back'){ go('search'); }
+  else if(a==='callNow'){ openIncoming(); }
+  else if(a==='toggleScript'){ toggleScript(); }
+  else if(a==='answer'){ startTalk(); }
+  else if(a==='hangup'){ closeCall(); }
+  else if(a==='theme'){ setNight(!night); }
+  else if(a==='relocate'){ toast('Location updated: Tuanjie Road, Yuexiu, Guangzhou'); }
+  else if(a==='openAdd'){ openAdd(); }
+  else if(a==='openBanner'){ hideBanner(); openAware(0); }
+  else if(a==='openAware'){ openAware(Number(t.closest('[data-idx]').getAttribute('data-idx'))); }
+  else if(a==='closeAware'){ closeAware(); }
+  else if(a==='awareOk'){ awareAct('ok'); }
+  else if(a==='awareCall'){ awareAct('call'); }
+  else if(a==='awareAlarm'){ awareAct('alarm'); }
+  else if(a==='closeAdd'){ closeAdd(); }
+  else if(a==='doAdd'){ doAdd(); }
+  else if(a==='toggleSpk'){
+    var spk=$('ovSpk'), off=spk.classList.toggle('off');
+    $('spkLabel').textContent = off ? 'Speaker · Off' : 'Speaker · On';
+  }
+  else if(a==='sendLoc'){ openSend(parseInt(el.getAttribute('data-i'),10)); }
+  else if(a==='sendCancel'){ closeSend(); }
+  else if(a==='sendOk'){
+    var c0=state.contacts[sendIdx];
+    closeSend();
+    if(c0) toast('Location sent to '+c0.n);
+  }
+  else if(a==='delContact'){
+    var i=parseInt(el.getAttribute('data-i'),10);
+    if(!isNaN(i)){ state.contacts.splice(i,1); renderContacts(); }
+  }
+});
+
+/* ================= Call form binding ================= */
+function syncCallSummary(){
+  $('callSummary').textContent = state.secs+' sec call · '+state.caller;
+}
+/* ---- Edit / Done: keep "start the call" and "edit the script" clearly distinct ---- */
+function setEditing(on){
+  state.editing=!!on;
+  $('editBtn').textContent = state.editing ? 'Done' : 'Edit';
+  $('nameVal').style.display = state.editing ? 'none' : '';
+  $('inName').style.display  = state.editing ? 'block' : 'none';
+  if(state.editing){ $('inName').value=state.caller; $('inName').focus(); }
+  else { $('nameVal').textContent=state.caller; }
+}
+$('editBtn').addEventListener('click',function(){
+  setEditing(!state.editing);
+  if(!state.editing) $('nameVal').textContent=state.caller;
+});
+$('inName').addEventListener('input',function(){
+  state.caller=this.value.trim()||'Family';
+  $('ovCaller').textContent=state.caller;
+  $('ovActiveName').textContent=state.caller;
+  syncCallSummary();
+});
+
+/* ---- length: slider plus tappable ticks that double as presets ---- */
+function markTicks(){
+  var v=Number($('inDur').value)||0, ts=document.querySelectorAll('#scCall .tick');
+  for(var i=0;i<ts.length;i++){
+    ts[i].classList.toggle('on', Number(ts[i].getAttribute('data-sec'))===v);
+  }
+}
+function setSecs(v){
+  v=Math.max(15,Math.min(60,parseInt(v,10)||45));
+  $('inDur').value=v;
+  state.secs=v;
+  $('durLabel').textContent=v+' sec';
+  paintRange(); markTicks(); syncCallSummary();
+}
+function paintRange(){
+  var el=$('inDur'), mn=Number(el.min)||0, mx=Number(el.max)||100, v=Number(el.value)||0;
+  var p=Math.round((v-mn)/(mx-mn)*100);
+  var rest = night ? '#333846' : '#E6E9F2';
+  el.style.background='linear-gradient(90deg,#4A6CFA 0 '+p+'%,'+rest+' '+p+'% 100%)';
+}
+$('inDur').addEventListener('input',function(){ setSecs(this.value); });
+(function(){
+  var ts=document.querySelectorAll('#scCall .tick');
+  for(var i=0;i<ts.length;i++){
+    ts[i].addEventListener('click',function(){ setSecs(this.getAttribute('data-sec')); });
+  }
+})();
+
+/* ---- script: collapse / expand, editable once open ---- */
+function syncScriptSub(){
+  $('scriptSub').textContent = 'Preview the script · {n} lines'.replace('{n}', state.lines.length);
+}
+/* if the script card would fall outside the nav-bar safe area, nudge the content up
+   so the footnote is always fully visible and never covered by the bottom nav */
+function revealScript(){
+  var sc=$('scCall'), card=$('scriptCard');
+  var bottom = card.getBoundingClientRect().bottom - sc.getBoundingClientRect().top + sc.scrollTop;
+  var room = sc.clientHeight - 116;
+  if(bottom + 8 > room) sc.scrollTop = bottom + 8 - room;
+}
+function toggleScript(){
+  var c=$('scriptCard'), open=c.classList.toggle('open');
+  $('scriptToggle').setAttribute('aria-expanded', open?'true':'false');
+  if(open) revealScript();
+}
+$('inLines').addEventListener('input',function(){
+  var arr=this.value.split('\n').map(function(s){return s.trim()}).filter(Boolean);
+  state.lines=arr.length?arr:['Hey, where are you?'];
+  syncScriptSub();
+});
+syncScriptSub();
+
+
+/* ================= Fit the phone shell ================= */
+/* The artboard is a fixed 393x852 and must not be cut off at the bottom in short windows,
+   so the whole shell scales proportionally; all inner px layout then keeps its ratio */
+function fitPhone(){
+  try{
+    var el=document.querySelector('.phone'); if(!el||!el.style) return;
+    var vw=(window.innerWidth||1280), vh=(window.innerHeight||960);
+    /* WeChat's in-app browser keeps a fixed bottom toolbar that would cover the app's
+       tab bar, so on phone-sized viewports we subtract that strip before fitting */
+    var wxInset=0;
+    try{ if(/micromessenger/i.test(navigator.userAgent||'') && vw<520) wxInset=40; }catch(e){}
+    vh-=wxInset;
+    /* Leave a breathing margin when there is room; when there is not (small window / mobile browser) fill the edges */
+    var mx = vw>=440 ? Math.max(8,Math.min(28,vw*0.035)) : 0;
+    var my = vh>=900 ? Math.max(8,Math.min(28,vh*0.030)) : 0;
+    var s=Math.min(1,(vw-2*mx)/393,(vh-2*my)/852);
+    /* guard against bad values only; 0.2 is right in landscape, do not force it back to 1 */
+    if(!(s>0)) s=1;
+    el.style.transform = wxInset
+      ? 'translateY('+(-wxInset/2).toFixed(2)+'px) scale('+s.toFixed(4)+')'
+      : 'scale('+s.toFixed(4)+')';
+  }catch(e){}
+}
+
+/* Old WeChat kernels (below Chrome 84) do not support gap in flex layout.
+   On those engines assigning style.gap is dropped and reads back as an empty string,
+   which is what we detect here. Modern browsers return immediately and get no extra CSS. */
+(function(){
+  try{
+    var probe=document.createElement('div');
+    probe.style.cssText='display:flex;gap:10px';
+    if(probe.style.gap!=='') return;
+    var out=[], i, j, ss, rules, r, g, d, axis;
+    for(i=0;i<document.styleSheets.length;i++){
+      ss=document.styleSheets[i];
+      try{ rules=ss.cssRules; }catch(e){ continue; }
+      if(!rules) continue;
+      for(j=0;j<rules.length;j++){
+        r=rules[j];
+        if(!r.style||!r.selectorText) continue;
+        d=r.style.getPropertyValue('display');
+        if(d!=='flex'&&d!=='inline-flex') continue;   /* grid gap already works on those engines, leave it alone */
+        g=r.style.getPropertyValue('gap');
+        if(!g) continue;
+        axis=(r.style.getPropertyValue('flex-direction')||'').indexOf('column')===0?'top':'left';
+        out.push(r.selectorText+'>*+*{margin-'+axis+':'+g+'}');
+      }
+    }
+    if(out.length){
+      var st=document.createElement('style');
+      st.setAttribute('data-gapfallback','1');
+      st.textContent=out.join('\n');
+      document.head.appendChild(st);
+    }
+  }catch(e){}
+})();
+
+/* ================= Boot ================= */
+renderGuard();
+renderContacts();
+syncAddBtn();
+syncCallSummary();
+setNight(false);
+paintRange();
+markTicks();
+renderAware();
+go('search');
+fitPhone();
+if(window.addEventListener){
+  window.addEventListener('resize',fitPhone);
+  window.addEventListener('orientationchange',fitPhone);
+}
+</script>
+</body>
+</html>
